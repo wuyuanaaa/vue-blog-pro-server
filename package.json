@@ -19,12 +19,14 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.4.3",
     "morgan": "~1.9.0",
+    "nodemailer": "^6.4.14",
     "qiniu": "^7.3.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.11.6",
     "@babel/core": "^7.11.6",
     "@babel/node": "^7.10.5",
-    "@babel/preset-env": "^7.11.5"
+    "@babel/preset-env": "^7.11.5",
+    "eslint": "^7.11.0"
   }
 }

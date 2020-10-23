@@ -4,7 +4,7 @@ const schema = new mongoose.Schema({
   username: String,
   password: String,
   nickname: String,
-  role: Number,
+  role: Number, // 71 管理员 1 普通用户
   githubId: Number,
   email: String,
   avatar: String

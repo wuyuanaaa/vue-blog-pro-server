@@ -10,10 +10,9 @@ export const decrypt = (str) => {
     padding: CryptoJS.pad.ZeroPadding
   })
   const decryptedStr = decrypt.toString(CryptoJS.enc.Utf8)
-  
+
   return decryptedStr
 }
-
 
 export const hmacMD5 = (str) => {
   return CryptoJS.HmacMD5(str, STORE_SALT).toString()

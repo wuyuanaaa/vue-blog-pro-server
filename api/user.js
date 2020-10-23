@@ -1,101 +1,47 @@
 import express from 'express'
 import axios from 'axios'
-import { signToken, authMiddleware } from '../utils/jwt.js'
 
-import {githubClientID, githubClientSecret } from '../config.js'
+import User from '../models/userModel'
+import Code from '../models/codeModel'
 
-import { decrypt, hmacMD5 } from '../utils/auth.js'
-
-import User from '../models/userModel.js'
-
+import { signToken, authMiddleware } from '../utils/jwt'
+import { githubClientID, githubClientSecret } from '../config'
+import { decrypt, hmacMD5 } from '../utils/auth'
+import { body } from 'express-validator'
+import { validateHandler } from '../utils/validate'
+import { transporter } from '../utils/email'
 
 const router = express.Router()
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-})
-
-// 检查登录状态
-router.get('/checkLogin', function (req, res, next) {
-  if (req.cookies.userName) {
-    let userCookies = req.cookies;
-    // 有操作则延长 cookie 时间
-    res.cookie("type", userCookies.type, {
-      path: '/',
-      maxAge: 1000*60*30
-    });
-    res.cookie("userName", userCookies.userName, {
-      path: '/',
-      maxAge: 1000*60*30
-    });
-    res.json({
-      status: '0',
-      msg: '',
-      result: {
-        userName: req.cookies.userName || ''
-      }
-    })
-  } else {
-    res.json({
-      status: '2',
-      msg: '未登录',
-      result: ''
-    });
-  }
-})
-
 // 用户登陆
-router.post('/login', (req, res) => {
-  
-  let { username, password } = req.body
-  password = decrypt(password)
+router.post('/login', (req, res, next) => {
+  const { username } = req.body
+  let { password } = req.body
 
-  var param = {$and:[
-      {username: username},
-      {password: hmacMD5(password)}
-    ]
+  const param = { $and: [
+    { username: username },
+    { password: hmacMD5(password) }
+  ]
   }
-  User.findOne(param, function (err, doc) {
-    if (err) {
+
+  User.findOne(param).then(doc => {
+    if (doc) {
+      const token = signToken({ id: doc.id })
+      res.json({
+        code: 1,
+        msg: '登陆成功！',
+        data: {
+          token
+        }
+      })
+    } else {
       res.json({
         code: 0,
-        msg: err.message
-      });
-    } else {
-      if (doc) {
-        const token = signToken({id: doc.id})
-        res.json({
-          code: 1,
-          msg: '登陆成功！',
-          data: {
-            token
-          }
-        });
-      } else {
-        res.json({
-          code: 0,
-          msg: '帐号或者密码错误'
-        })
-      }
+        msg: '帐号或者密码错误'
+      })
     }
-  })
-})
-
-// 用户登出
-router.post('/logout', function (req, res, next) {
-  res.cookie("userName", "", {
-    path: '/',
-    maxAge: 0
-  });
-  res.cookie("type", "", {
-    path: '/',
-    maxAge: 0
-  });
-  res.json({
-    status: '0',
-    msg: '',
-    result: ''
+  }).catch(e => {
+    next(e)
   })
 })
 
@@ -112,12 +58,113 @@ router.get('/userInfo', authMiddleware, (req, res, next) => {
       msg: '成功',
       data: { id, nickname, role, email, avatar }
     })
-  })  
+  })
 })
+
+// 发送注册邮件
+router.post('/sendCode',
+  [
+    body('email').isEmail().withMessage('邮箱格式错误')
+  ],
+  (req, res, next) => {
+    if (!validateHandler(req, res)) {
+      return
+    }
+    const { email } = req.body
+    const code = Math.floor(Math.random() * 1000000)
+
+    new Code({
+      email,
+      code
+    }).save()
+    /* .then(() => {
+      return transporter.sendMail({
+        from: '"博客-吴予安" <blog_yuanaaa@163.com>',
+        to: email,
+        subject: '很高兴遇见你~',
+        html: `<p>你的验证码是<b>${code}</b></p>`
+      })
+    }) */
+      .then(() => {
+        res.json({
+          code: 1,
+          msg: '发送验证码成功！'
+        })
+      })
+      .catch(e => {
+        next(e)
+      })
+  }
+)
+
+// 用户注册
+router.post('/register',
+  [
+    body('username').matches(/^[a-zA-Z][a-zA-Z0-9-_@]{5,17}$/).withMessage('用户名格式错误'),
+    body('nickname').isLength({ min: 1, max: 12 }).withMessage('昵称格式错误'),
+    body('password').isLength({ min: 24, max: 24 }).withMessage('密码格式错误'),
+    body('email').isEmail().withMessage('邮箱格式错误')
+  ],
+  async (req, res, next) => {
+    if (!validateHandler(req, res)) return
+    const { username, nickname, password, email, code } = req.body
+
+    const checkExist = await Promise.all([
+      User.findOne({ username }),
+      User.findOne({ nickname }),
+      User.findOne({ email }),
+    ])
+    const errMsg = ['用户名已存在', '昵称已存在', '邮箱已存在']
+
+    const checkExistResult = checkExist.reduce((result, cur, index) => {
+      if (cur) {
+        result.pass = false
+        result.msg += result.msg ? `、${errMsg[index]}` : errMsg[index]
+      }
+      return result
+    }, { pass: true, msg: '' })
+
+    if (!checkExistResult.pass) {
+      res.json({
+        code: 0,
+        msg: checkExistResult.msg
+      })
+      return
+    }
+    const codeDoc = await Code.findOne({ email, code })
+    if (!codeDoc) {
+      res.json({
+        code: 0,
+        msg: '验证码错误'
+      })
+      return
+    }
+    const newUser = await new User({
+      username,
+      nickname,
+      role: 1,
+      password: hmacMD5(password),
+      email
+    }).save()
+    console.log(newUser)
+    if (newUser) {
+      res.json({
+        code: 1,
+        data: {
+          username: newUser.username,
+          nickname: newUser.nickname
+        },
+        msg: '注册成功'
+      })
+      return
+    }
+    next()
+  }
+)
 
 // github 登陆 code 获取用户信息
 router.get(
-  '/github', 
+  '/github',
   (req, res) => {
     const data = {
       client_id: githubClientID,
@@ -134,48 +181,48 @@ router.get(
         'accept': 'application/json'
       }
     })
-    .then(token => {
-      return axios({
-        method: 'get',
-        url: 'https://api.github.com/user',
-        timeout: 5000,
-        headers: {
-          'Authorization': `token ${token.data.access_token}`
-        }
+      .then(token => {
+        return axios({
+          method: 'get',
+          url: 'https://api.github.com/user',
+          timeout: 5000,
+          headers: {
+            'Authorization': `token ${token.data.access_token}`
+          }
+        })
       })
-    })
-    .then(info => {
+      .then(info => {
       // 处理 github 返回的用户信息
-      return handleGithubInfo(info.data)
-    })
-    .then(data => {
-      const token = signToken({id: data.id})
-      res.json({
-        code: 1,
-        msg: '登陆成功',
-        data: {
-          token,
-          userInfo: data
-        }
+        return handleGithubInfo(info.data)
       })
-    })
-    .catch(e => {
-      res.json({
-        code: 0,
-        msg: '登陆异常',
-        data: e
+      .then(data => {
+        const token = signToken({ id: data.id })
+        res.json({
+          code: 1,
+          msg: '登陆成功',
+          data: {
+            token,
+            userInfo: data
+          }
+        })
       })
-    })
-})
+      .catch(e => {
+        res.json({
+          code: 0,
+          msg: '登陆异常',
+          data: e
+        })
+      })
+  })
 
 function handleGithubInfo(info) {
   return new Promise((resolve, reject) => {
-    const { id, name, avatar_url, email} = info
-  // 查找用户是否已经录入数据库
+    const { id, name, avatar_url, email } = info
+    // 查找用户是否已经录入数据库
     User.findOne({
       githubId: id
     }, (err, user) => {
-      if(err) {
+      if (err) {
         console.log('err', err)
       }
       if (user === null) { // 用户不存在
@@ -187,8 +234,8 @@ function handleGithubInfo(info) {
           email,
           avatar: avatar_url
         })
-        newUser.save().then(({id, nickname, avatar}) => {
-          resolve({id, nickname, avatar})
+        newUser.save().then(({ id, nickname, avatar }) => {
+          resolve({ id, nickname, avatar })
         }).catch(e => {
           reject(e)
         })
@@ -197,9 +244,6 @@ function handleGithubInfo(info) {
       }
     })
   })
-  
-
 }
-
 
 export default router

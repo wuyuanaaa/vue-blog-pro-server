@@ -1,9 +1,10 @@
-import express from 'express'
-import Tag from '../models/tagModel.js'
+const express = require('express')
+const Tag = require('../models/tagModel.js') 
 
-import { authMiddleware } from '../utils/jwt.js'
-const { body } = require('express-validator')
-import { validateHandler } from '../utils/validate.js'
+const { authMiddleware } = require('../utils/jwt.js')
+const { body }= require('express-validator') 
+
+const { validateHandler } = require('../utils/validate.js') 
 
 const router = express.Router()
 
@@ -191,4 +192,4 @@ router.delete('/remove',
   }
 )
 
-export default router
+module.exports = router

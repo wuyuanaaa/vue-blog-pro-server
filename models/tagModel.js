@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
   tagName: {
@@ -36,4 +36,4 @@ schema.post('remove', function(doc, next) {
 })
 
 
-export default mongoose.model('Tag',schema)
+module.exports = mongoose.model('Tag',schema)

@@ -1,10 +1,10 @@
-import express from 'express'
-import Comment from '../models/commentModel.js'
-import Article from '../models/articleModel.js'
+const express = require('express')
+const Comment = require('../models/commentModel.js') 
+const Article = require('../models/articleModel.js')
 
-import { authMiddleware } from '../utils/jwt.js'
+const { authMiddleware } = require('../utils/jwt.js')
 
-const EventEmitter = require('events')
+const EventEmitter = require('events') 
 class MyEmitter extends EventEmitter {}
 
 const myEmitter = new MyEmitter();
@@ -114,4 +114,4 @@ router.delete('/remove', authMiddleware, (req, res, next) => {
     })
 })
 
-export default router
+module.exports = router

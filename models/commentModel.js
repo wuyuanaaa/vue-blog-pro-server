@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 // import Article from './articleModel'
 
 var schema = new mongoose.Schema({
@@ -32,4 +32,4 @@ schema.options.toJSON = {
 }
 
 
-export default mongoose.model('Comment', schema);
+module.exports = mongoose.model('Comment', schema);

@@ -1,11 +1,11 @@
-import user from './user.js'
-import article from './article.js'
-import img from './img.js'
-import comment from './comment.js'
-import qiniu from './qiniu.js'
-import tag from './tag.js'
+const user = require('./user.js') 
+const article = require('./article.js') 
+const img = require('./img.js') 
+const comment = require('./comment.js') 
+const qiniu = require('./qiniu.js') 
+const tag = require('./tag.js') 
 
-export default function(app) {
+module.exports = function(app) {
   app.use('/api/user', user)
   app.use('/api/article', article)
   app.use('/api/img', img)

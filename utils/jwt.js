@@ -1,13 +1,13 @@
-import jwt from 'jsonwebtoken'
-import { secretKey } from '../config.js'
+const jwt = require('jsonwebtoken')
+const { secretKey } = require('../config.js')
 
-export function signToken(obj) {
+function signToken(obj) {
   return jwt.sign(obj, secretKey, {
     expiresIn: '7h'
   })
 }
 
-export function verifyToken(token) {
+function verifyToken(token) {
   return new Promise((resolve, reject) => {
     jwt.verify(token, secretKey, (err, decoded) => {
       if(err) {
@@ -19,7 +19,7 @@ export function verifyToken(token) {
   })
 }
 
-export function authMiddleware(req, res, next) {
+function authMiddleware(req, res, next) {
   const token = req.cookies['Blog-Token']
   if (token) {
     verifyToken(token)
@@ -40,4 +40,10 @@ export function authMiddleware(req, res, next) {
       msg: '无效 token'
     })
   }
+}
+
+module.exports = {
+  signToken,
+  verifyToken,
+  authMiddleware
 }

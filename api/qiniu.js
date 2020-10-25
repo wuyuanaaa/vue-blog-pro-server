@@ -1,6 +1,6 @@
-import express from 'express'
-import { authMiddleware } from '../utils/jwt.js'
-import { uploadToken } from '../utils/qiniu.js'
+const express = require('express')
+const { authMiddleware } = require('../utils/jwt.js') 
+const { uploadToken } = require('../utils/qiniu.js') 
 
 const router = express.Router()
 
@@ -19,4 +19,4 @@ router.get('/token', authMiddleware, (req, res) => {
 
 
 
-export default router
+module.exports = router

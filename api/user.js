@@ -1,17 +1,18 @@
-import express from 'express'
-import axios from 'axios'
+const express = require('express')
+const axios =require('axios') 
 
-import User from '../models/userModel'
-import Code from '../models/codeModel'
+const User =require('../models/userModel.js') 
+const Code =require('../models/codeModel.js') 
 
-import { signToken, authMiddleware } from '../utils/jwt'
-import { githubClientID, githubClientSecret } from '../config'
-import { decrypt, hmacMD5 } from '../utils/auth'
-import { body } from 'express-validator'
-import { validateHandler } from '../utils/validate'
-import { transporter } from '../utils/email'
+const { signToken, authMiddleware } =require('../utils/jwt.js') 
+const { githubClientID, githubClientSecret } =require('../config.js') 
+const { hmacMD5 } =require('../utils/auth.js') 
+const { body } =require('express-validator') 
+const { validateHandler } =require('../utils/validate.js') 
+const { transporter } =require('../utils/email.js') 
 
 const router = express.Router()
+
 
 // 用户登陆
 router.post('/login', (req, res, next) => {
@@ -77,14 +78,14 @@ router.post('/sendCode',
       email,
       code
     }).save()
-    /* .then(() => {
+    .then(() => {
       return transporter.sendMail({
         from: '"博客-吴予安" <blog_yuanaaa@163.com>',
         to: email,
         subject: '很高兴遇见你~',
-        html: `<p>你的验证码是<b>${code}</b></p>`
+        html: `<p>你的验证码是<b>${code}</b>，10 分钟内有效！</p>`
       })
-    }) */
+    })
       .then(() => {
         res.json({
           code: 1,
@@ -139,6 +140,17 @@ router.post('/register',
       })
       return
     }
+    if ((new Date() - codeDoc.createdAt) > (10 * 60 * 1000)) {
+      res.json({
+        code: 0,
+        msg: '验证码过期'
+      })
+      // 移除过期的验证码
+      codeDoc.remove()
+      return
+    }
+    // 移除已使用的验证码
+    codeDoc.remove()
     const newUser = await new User({
       username,
       nickname,
@@ -146,13 +158,14 @@ router.post('/register',
       password: hmacMD5(password),
       email
     }).save()
-    console.log(newUser)
     if (newUser) {
+      const token = signToken({ id: newUser.id })
       res.json({
         code: 1,
         data: {
           username: newUser.username,
-          nickname: newUser.nickname
+          nickname: newUser.nickname,
+          token
         },
         msg: '注册成功'
       })
@@ -246,4 +259,4 @@ function handleGithubInfo(info) {
   })
 }
 
-export default router
+module.exports = router

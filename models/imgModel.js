@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
   "delete":String,
@@ -15,4 +15,4 @@ const schema = new mongoose.Schema({
 });
 
 
-export default mongoose.model('Img',schema)
+module.exports = mongoose.model('Img',schema)

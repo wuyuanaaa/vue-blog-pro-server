@@ -1,14 +1,16 @@
-import createError from 'http-errors'
-import express from 'express'
-import cookieParser from 'cookie-parser'
-import logger from 'morgan'
+const createError = require('http-errors') 
+const express = require('express')
+const cookieParser = require('cookie-parser') 
+const logger = require('morgan') 
 
-import api from './api/index.js'
+const api = require('./api/index.js') 
 
 const app = express()
 
 // mongodb
-import './mongoConnect.js'
+const mongoConnect = require('./mongoConnect.js') 
+
+mongoConnect()
 
 // 加载日志的中间件
 // 每一次服务请求都会将信息打印在控制台中
@@ -44,4 +46,4 @@ app.use(function(err, req, res, next) {
 
 app.listen(3000)
 
-export default app
+module.exports = app

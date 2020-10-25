@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
   code: {
@@ -13,4 +13,4 @@ const schema = new mongoose.Schema({
   timestamps: true
 })
 
-export default mongoose.model('Code', schema)
+module.exports = mongoose.model('Code', schema)

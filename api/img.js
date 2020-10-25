@@ -1,7 +1,6 @@
-import express from 'express'
-import { authMiddleware } from '../utils/jwt.js'
-
-import Img from '../models/imgModel.js'
+const express = require('express')
+const { authMiddleware } = require('../utils/jwt.js')
+const Img = require('../models/imgModel.js')
 
 const router = express.Router()
 
@@ -112,4 +111,4 @@ router.post('/remove', function (req, res) {
   })
 });
 
-export default router
+module.exports = router

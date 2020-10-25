@@ -1,7 +1,7 @@
-import nodemailer from 'nodemailer'
-import { emailSmtp } from '../config'
+const nodemailer = require('nodemailer') 
+const { emailSmtp } = require('../config.js') 
 
-export const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   // host: 'smtp.ethereal.email',
   service: '163', // 使用了内置传输发送邮件 查看支持列表：https://nodemailer.com/smtp/well-known/
   secureConnection: true, // 使用了 SSL
@@ -11,3 +11,7 @@ export const transporter = nodemailer.createTransport({
     pass: emailSmtp
   }
 });
+
+module.exports = {
+  transporter
+}

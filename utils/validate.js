@@ -1,6 +1,7 @@
-const { validationResult } = require('express-validator')
+const { validationResult } = require('express-validator') 
 
-export function validateHandler(req, res) {
+
+function validateHandler(req, res) {
   const errors = validationResult(req)
   if (errors.isEmpty()) {
     return true
@@ -20,4 +21,8 @@ export function validateHandler(req, res) {
     })
   }
   return false
+}
+
+module.exports = {
+  validateHandler
 }

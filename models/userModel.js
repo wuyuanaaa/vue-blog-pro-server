@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
   username: String,
@@ -8,6 +8,8 @@ const schema = new mongoose.Schema({
   githubId: Number,
   email: String,
   avatar: String
+}, {
+  timestamps: true
 })
 
 schema.options.toJSON = {
@@ -18,4 +20,4 @@ schema.options.toJSON = {
   }
 }
 
-export default mongoose.model('User',schema)
+module.exports = mongoose.model('User',schema)

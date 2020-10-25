@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const schema = new mongoose.Schema({
   _id: { type: String, required: true },
@@ -6,4 +6,4 @@ const schema = new mongoose.Schema({
 })
 
 
-export default mongoose.model('Id',schema)
+module.exports = mongoose.model('Id',schema)

@@ -1,5 +1,5 @@
-import mongoose from 'mongoose'
-import Tag from './tagModel.js'
+const mongoose = require('mongoose')
+const Tag = require('./tagModel.js') 
 
 
 const schema = new mongoose.Schema({
@@ -79,4 +79,4 @@ schema.method({
 })
 
 
-export default mongoose.model('Article', schema);
+module.exports = mongoose.model('Article', schema);

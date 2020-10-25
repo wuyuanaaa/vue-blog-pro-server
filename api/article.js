@@ -1,6 +1,7 @@
-import express from 'express'
-import Article from '../models/articleModel.js'
-import { authMiddleware } from '../utils/jwt.js'
+const express = require('express')
+const Article = require('../models/articleModel.js')
+
+const { authMiddleware } = require('../utils/jwt.js')
 
 const router = express.Router()
 
@@ -168,13 +169,14 @@ router.get('/page', (req, res, next) => {
       title: true,
       tags: true,
       reading: true,
+      comments: true,
       html: true,
       markdown: true,
       type: true,
       catalog: true,
       createdAt: true,
       updatedAt: true
-    }).populate('tags').sort({updatedAt: -1}).skip(skip).limit(pageSize).exec((err, doc) => {
+    }).populate('tags').sort({updatedAt: -1}).skip(skip).limit(pageSize).exec((err, doc) => { // 
       if(err) next(err)
       res.json({
         code: 1,
@@ -348,4 +350,4 @@ router.post('/change', function (req, res) {
 
 
 
-export default router
+module.exports = router

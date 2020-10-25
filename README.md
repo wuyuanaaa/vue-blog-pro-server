@@ -1,6 +1,6 @@
 # 🎉vue-blog-pro-server
 
-## 可参考的地方
+## 可供参考的地方
 
 - 基于 `express` 和 `mongdb` 的后端构建
 - `jwt` 登陆
@@ -15,20 +15,19 @@
 - clone 至本地
 
 ```
-git clone https://github.com/wuyuanaaa/blog-server.git
+git clone https://github.com/wuyuanaaa/blog-pro-server.git
 ```
 
 - 安装依赖
 
 ```
-cd blog-server
+cd blog-pro-server
 npm install
 ```
 
 - 启动服务
 
 __需要预先配置本地的 mongodb 服务器__
-
 
 ```
 npm start
@@ -43,4 +42,5 @@ npm start
 
 ## 更新记录
 
-- 2020-10-23 用户注册
+- 2020-10-23 新增 用户注册
+- 2020-10-25 移除 bebal，ES6 相关  调整 部分接口

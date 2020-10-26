@@ -1,9 +1,9 @@
 const express = require('express')
 const Tag = require('../models/tagModel.js') 
 
-const { authMiddleware } = require('../utils/jwt.js')
 const { body }= require('express-validator') 
 
+const { authMiddleware, adminAuthMiddleware } = require('../utils/jwt.js')
 const { validateHandler } = require('../utils/validate.js') 
 
 const router = express.Router()
@@ -34,7 +34,7 @@ router.get('/list',
 )
 
 router.get('/page',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   (req, res) => {
     let { page, pageSize, name } = req.query
     page = parseInt(page)
@@ -84,7 +84,7 @@ router.get('/page',
 )
 
 router.post('/create',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   [
     body('tagName').isLength({ max: 20 }).withMessage('标签名称不能超过20个字符')
   ],
@@ -142,7 +142,7 @@ router.get('/detail', (req, res, next) => {
 })
 
 router.put('/edit',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   (req, res) => {
     const { id, ...data } = req.body
 
@@ -164,7 +164,7 @@ router.put('/edit',
 )
 
 router.delete('/remove',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   (req, res) => {
     const id = req.body.id
 

@@ -1,13 +1,13 @@
 const express = require('express')
 const Article = require('../models/articleModel.js')
 
-const { authMiddleware } = require('../utils/jwt.js')
+const { authMiddleware, adminAuthMiddleware } = require('../utils/jwt.js')
 
 const router = express.Router()
 
 /* 创建新文章 */
 router.post('/create',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   (req, res) => {
     new Article({ ...req.body }).save((err, article) => {
       if (err) {
@@ -57,10 +57,9 @@ router.put('/edit',
 
 /* 删除文章 */
 router.delete('/remove',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   (req, res) => {
     const id = req.body.id
-
     Article.findById(id, function (err, doc) {
       if (err) {
         res.json({
@@ -87,7 +86,7 @@ router.delete('/remove',
 
 /* 获取全部文章分页 */
 router.get('/page/all',
-  authMiddleware,
+  [authMiddleware,adminAuthMiddleware],
   (req, res) => {
     let { page, pageSize, title, tag } = req.query
 
@@ -122,7 +121,7 @@ router.get('/page/all',
           catalog: true,
           createdAt: true,
           updatedAt: true
-        }).populate('tags').sort({updatedAt: -1}).skip(skip).limit(pageSize)
+        }).populate('tags').sort({createdAt: -1}).skip(skip).limit(pageSize)
         articlesModel.exec(function (err, doc) {
           if (err) {
             res.json({
@@ -148,14 +147,14 @@ router.get('/page/all',
   }
 )
 
-/* 获取全部文章分页 */
+/* 获取文章分页 */
 router.get('/page', (req, res, next) => {
   let { page, pageSize, title, tag } = req.query
   page = parseInt(page)
   pageSize = parseInt(pageSize)
   const skip = (page - 1) * pageSize
 
-  const query = {}
+  const query = {type : 0}
   if (title) {
     query.title = {$regex: new RegExp(title)}
   }
@@ -176,7 +175,7 @@ router.get('/page', (req, res, next) => {
       catalog: true,
       createdAt: true,
       updatedAt: true
-    }).populate('tags').sort({updatedAt: -1}).skip(skip).limit(pageSize).exec((err, doc) => { // 
+    }).populate('tags').sort({createdAt: -1}).skip(skip).limit(pageSize).exec((err, doc) => { // 
       if(err) next(err)
       res.json({
         code: 1,
@@ -257,6 +256,9 @@ router.get('/detail/more',
       })
       .populate('tags')
       .then(doc => {
+        // 阅读量++
+        doc.reading++
+        doc.save()
         data.detail = doc
         const { updatedAt } = doc
 
@@ -305,49 +307,7 @@ router.get('/tag', function (req, res) {
         }
       })
     }
-  });
-
-});
-
-// 添加文章
-router.post('/save', function (req, res) {
-  check(req, res, () => {
-    new Article(req.body).save(function (err) {
-      if (err) {
-        res.status(500).send();
-        return
-      }
-      res.send({
-        status: '0'
-      });
-    })
   })
-});
-
-// 修改文章
-router.post('/change', function (req, res) {
-  check(req, res, () => {
-    let _id = req.body._id;
-    let newData = req.body.newData;
-
-    Article.update({_id: _id}, {$set: newData}, function (err, doc) {
-      if (err) {
-        res.json({
-          status: '1',
-          msg: err.message,
-          result: ''
-        })
-      } else {
-        res.json({
-          status: '0',
-          msg: '',
-          result: ''
-        })
-      }
-    })
-  });
-});
-
-
+})
 
 module.exports = router

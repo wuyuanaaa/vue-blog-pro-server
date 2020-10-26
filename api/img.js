@@ -1,5 +1,4 @@
 const express = require('express')
-const { authMiddleware } = require('../utils/jwt.js')
 const Img = require('../models/imgModel.js')
 
 const router = express.Router()
@@ -38,17 +37,6 @@ function check (req, res, next) {
 }
 
 
-// 保存图片
-router.post('/save', authMiddleware, function (req, res, next) {
-  console.log(req.body.file)
-
-  /* const form = new FormData()
-  form.append('smfile', req.body.file) */
-
-  
-  
- 
-});
 
 // 获取图片列表
 router.get('/list', function(req, res) {

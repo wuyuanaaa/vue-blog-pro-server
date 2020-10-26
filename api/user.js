@@ -19,13 +19,40 @@ router.post('/login', (req, res, next) => {
   const { username } = req.body
   let { password } = req.body
 
-  const param = { $and: [
-    { username: username },
-    { password: hmacMD5(password) }
-  ]
-  }
+  User.findOne({
+    username: username,
+    password: hmacMD5(password)
+  }).then(doc => {
+    if (doc) {
+      const token = signToken({ id: doc.id })
+      res.json({
+        code: 1,
+        msg: '登陆成功！',
+        data: {
+          token
+        }
+      })
+    } else {
+      res.json({
+        code: 0,
+        msg: '帐号或者密码错误'
+      })
+    }
+  }).catch(e => {
+    next(e)
+  })
+})
 
-  User.findOne(param).then(doc => {
+// 后台登陆
+router.post('/login/admin', (req, res, next) => {
+  const { username } = req.body
+  let { password } = req.body
+
+  User.findOne({
+    username: username,
+    password: hmacMD5(password),
+    role: 71
+  }).then(doc => {
     if (doc) {
       const token = signToken({ id: doc.id })
       res.json({

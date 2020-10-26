@@ -2,7 +2,7 @@ const express = require('express')
 const Comment = require('../models/commentModel.js') 
 const Article = require('../models/articleModel.js')
 
-const { authMiddleware } = require('../utils/jwt.js')
+const { authMiddleware, adminAuthMiddleware } = require('../utils/jwt.js')
 
 const EventEmitter = require('events') 
 class MyEmitter extends EventEmitter {}
@@ -26,7 +26,9 @@ router.post('/create', authMiddleware, async (req, res, next) => {
 })
 
 // 获取评论分页
-router.get('/page', (req, res, next) => {
+router.get('/page',
+[authMiddleware,adminAuthMiddleware],
+(req, res, next) => {
   let { page, pageSize, content } = req.query
   page = parseInt(page)
   pageSize = parseInt(pageSize)
@@ -78,40 +80,43 @@ router.get('/list', (req, res, next) => {
 })
 
 // 删除评论
-router.delete('/remove', authMiddleware, (req, res, next) => {
-  const id = req.body.id
+router.delete('/remove', 
+  [authMiddleware,adminAuthMiddleware], 
+  (req, res, next) => {
+    const id = req.body.id
 
-  Comment.findOne({ _id: id })
-    .then(doc => {
-      myEmitter.once('remove', () => {
-        doc.remove()
-          .then(() => {
-            return Article.updateOne({_id: doc.article}, {$inc: {comments: followCount-1}})
-          })
-          .then(() => {
-            res.json({
-              code: 1,
-              msg: '成功！'
+    Comment.findOne({ _id: id })
+      .then(doc => {
+        myEmitter.once('remove', () => {
+          doc.remove()
+            .then(() => {
+              return Article.updateOne({_id: doc.article}, {$inc: {comments: followCount-1}})
             })
-          })
-          .catch(e => {
-            next(e)
-          })
-      })
-      
-      let followCount = 0
-      // 如果是一级评论则删除跟随
-      if (!doc.follow) {
-        Comment.deleteMany({ superior: doc.id }).then(res => {
-          followCount -= res.n
-          myEmitter.emit('remove')
-        }).catch(e => {
-          next(err)
+            .then(() => {
+              res.json({
+                code: 1,
+                msg: '成功！'
+              })
+            })
+            .catch(e => {
+              next(e)
+            })
         })
-      } else { // 如果是二级评论则只删除该条
-        myEmitter.emit('remove')
-      }
-    })
-})
+        
+        let followCount = 0
+        // 如果是一级评论则删除跟随
+        if (!doc.follow) {
+          Comment.deleteMany({ superior: doc.id }).then(res => {
+            followCount -= res.n
+            myEmitter.emit('remove')
+          }).catch(e => {
+            next(err)
+          })
+        } else { // 如果是二级评论则只删除该条
+          myEmitter.emit('remove')
+        }
+      })
+  }
+)
 
 module.exports = router
